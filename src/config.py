@@ -11,6 +11,9 @@ from typing import Dict
 @dataclass
 class SorterConfig:
     """소그룹 편성 설정"""
+
+    # 앱 버전 (Single Source of Truth)
+    APP_VERSION: str = "3.0.0"
     
     # 그룹당 목표 인원
     group_size: int = 10

@@ -28,7 +28,7 @@ def main(input_file: str, output_file: str = None, config: SorterConfig = None):
         output_file = config.output_filename
     
     print("=" * 50)
-    print("교인 소그룹 자동 편성 시스템")
+    print(f"교인 소그룹 자동 편성 시스템 v{SorterConfig.APP_VERSION}")
     print("=" * 50)
     
     # 1. 데이터 로드

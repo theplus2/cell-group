@@ -1,7 +1,7 @@
 [Setup]
 AppId={{5B680075-8D4C-4315-99A0-2178C9E7B35C}
 AppName=소그룹 자동 편성기
-AppVersion=2.8.3
+AppVersion=3.0.0
 AppPublisher=잠실한빛교회 (윤영천 목사)
 AppPublisherURL=https://github.com/theplus2/cell-group
 AppSupportURL=https://github.com/theplus2/cell-group

@@ -267,16 +267,6 @@ class GroupSorter:
         else:
             self.result_df = pd.DataFrame(columns=working_df.columns.tolist() + ['소그룹명'])
         
-        # 8. 분리(Exclude) 제약 조건 후처리 (전체 결과에 대해)
-        self._apply_exclude_constraints_global()
-        
-        # 9. 지정된 리더 배정
-        if designated_leaders and len(self.result_df) > 0:
-            self._assign_leaders_to_groups(designated_leaders, global_group_counter - 1)
-        
-        # 10. 리더가 없는 조에 대해 자동 리더 선정
-        self._auto_assign_leaders()
-        
         # 출력 컬럼 정리
         output_columns = ['소그룹명', '이름', '나이', '출석현황', '출석등급', '분류결과']
         available_columns = [col for col in output_columns if col in self.result_df.columns]

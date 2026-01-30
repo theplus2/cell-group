@@ -253,7 +253,7 @@ class MainWindow(QMainWindow):
     
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("교인 소그룹 자동 편성 시스템 v2.5")
+        self.setWindowTitle(f"교인 소그룹 자동 편성 시스템 v{SorterConfig.APP_VERSION}")
         self.setMinimumSize(1000, 750)
         self.setAcceptDrops(True)
         
@@ -305,6 +305,21 @@ class MainWindow(QMainWindow):
         """)
         self.browse_btn.clicked.connect(self.browse_file)
         file_layout.addWidget(self.browse_btn)
+
+        self.reset_btn = QPushButton("초기화")
+        self.reset_btn.setMinimumHeight(40)  # 파일 선택 버튼보다 작게
+        self.reset_btn.setStyleSheet("""
+            QPushButton {
+                background: #dddddd;
+                color: #333;
+                font-size: 14px;
+                border-radius: 8px;
+                padding: 10px 15px;
+            }
+            QPushButton:hover { background: #cccccc; }
+        """)
+        self.reset_btn.clicked.connect(self.reset_all)
+        file_layout.addWidget(self.reset_btn)
         
         main_layout.addWidget(file_group)
         
@@ -646,8 +661,11 @@ class MainWindow(QMainWindow):
                 item = QTableWidgetItem(display_text)
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 
-                # 분류에 따른 색상: 리더(초록), 일반(무색), 케어 대상(분홍)
-                if 분류 == '리더':
+                # 분류에 따른 색상: 나이초과(노랑) > 리더(초록) > 케어 대상(분홍)
+                if member.get('나이_범위_초과', False):
+                    item.setBackground(QColor('yellow'))
+                    item.setToolTip(item.toolTip() + "\n⚠️ 나이 허용 범위 초과")
+                elif 분류 == '리더':
                     item.setBackground(QColor('#d4edda'))  # 초록
                 elif 분류 == '케어 대상':
                     item.setBackground(QColor('#f8d7da'))  # 분홍
@@ -664,6 +682,67 @@ class MainWindow(QMainWindow):
         table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         table.verticalHeader().setVisible(False)
     
+    def reset_all(self):
+        """앱 상태 초기화"""
+        # 1. 확인 대화상자
+        if self.input_file is not None:
+            reply = QMessageBox.question(
+                self, '초기화 확인', 
+                '로드된 데이터와 모든 설정을 초기화하시겠습니까?',
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, 
+                QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.No:
+                return
+                
+        # 2. 데이터 초기화
+        self.input_file = None
+        self.result_df = None
+        self.stats_df = None
+        
+        # 3. UI 초기화
+        # 파일 라벨
+        self.file_label.setText("파일을 선택하거나 여기에 드래그하세요")
+        self.file_label.setStyleSheet("""
+            QLabel {
+                padding: 20px;
+                border: 2px dashed #aaa;
+                border-radius: 8px;
+                background: #f9f9f9;
+                font-size: 14px;
+                color: #666;
+            }
+        """)
+        
+        # 버튼 상태
+        self.run_btn.setEnabled(False)
+        self.run_btn.setStyleSheet("""
+            QPushButton {
+                background: #28a745;
+                color: white;
+                font-size: 16px;
+                font-weight: bold;
+                border-radius: 8px;
+            }
+            QPushButton:hover { background: #218838; }
+            QPushButton:disabled { background: #ccc; }
+        """)
+        
+        # 설정값 리셋
+        self.group_size_spin.setValue(10)
+        self.age_spin.setValue(5)
+        
+        # 제약 조건 탭 리셋
+        self.constraints_tab.reset_all()
+        
+        # 결과 테이블 및 로그 초기화
+        self.result_table.clear()
+        self.result_table.setRowCount(0)
+        self.result_table.setColumnCount(0)
+        self.progress_bar.setVisible(False)
+        
+        self.statusbar.showMessage("초기화되었습니다.")
+
     def populate_table(self, table: QTableWidget, df):
         """DataFrame을 QTableWidget에 표시 (기본 형식)"""
         table.clear()
@@ -676,8 +755,18 @@ class MainWindow(QMainWindow):
                 item = QTableWidgetItem(str(value))
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 
-                # 분류결과에 따른 색상: 리더(초록), 일반(무색), 케어 대상(분홍)
-                if df.columns[j] == '분류결과':
+                # 분류결과에 따른 색상: 나이초과(노랑) > 리더(초록), 일반(무색), 케어 대상(분홍)
+                # 나이_범위_초과 컬럼 인덱스 확인
+                is_outlier = False
+                if '나이_범위_초과' in df.columns:
+                    col_idx = df.columns.get_loc('나이_범위_초과')
+                    is_outlier = row[col_idx] if col_idx < len(row) else False
+
+                if is_outlier:
+                    item.setBackground(QColor('yellow'))
+                    item.setForeground(QColor('black'))
+                    item.setToolTip("⚠️ 나이 허용 범위 초과")
+                elif df.columns[j] == '분류결과':
                     if value == '리더':
                         item.setBackground(QColor('#d4edda'))
                         item.setForeground(QColor('black'))

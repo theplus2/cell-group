@@ -144,26 +144,78 @@ class DataLoader:
                         group_df['정렬순서'] = group_df['분류결과'].map(lambda x: sort_order.get(x, 1))
                         group_df = group_df.sort_values('정렬순서')
                     
-                    # 멤버 이름 추출 (리더는 ⭐ 표시)
+                    # 멤버 이름 추출 (리더는 ⭐ 표시) 및 스타일 정보 저장
                     members = []
+                    member_styles = [] # 각 멤버 셀의 스타일 정보
                     for _, member in group_df.iterrows():
                         name = str(member.get('이름', ''))
                         분류 = member.get('분류결과', '')
+                        나이_범위_초과 = member.get('나이_범위_초과', False) # '나이_범위_초과' 컬럼이 있다고 가정
+                        
+                        display_name = name
                         if 분류 == '리더':
-                            members.append(f"⭐ {name}")
+                            display_name = f"⭐ {name}"
+                        
+                        members.append(display_name)
+                        
+                        # 스타일 우선순위: 나이_범위_초과 > 리더 > 케어 대상
+                        if 나이_범위_초과:
+                            member_styles.append('warning')
+                        elif 분류 == '리더':
+                            member_styles.append('leader')
+                        elif 분류 == '케어 대상':
+                            member_styles.append('care')
                         else:
-                            members.append(name)
+                            member_styles.append(None) # 기본 스타일
                     
                     # 빈 셀 채우기
                     while len(members) < max_members:
                         members.append('')
+                        member_styles.append(None) # 빈 셀은 스타일 없음
                     
                     rows.append([group_name] + members)
+                    styles_map.append([None] + member_styles) # 첫 컬럼(조 이름)은 스타일 없음
                 
                 # 헤더 설정
                 headers = ['조'] + [f'멤버 {i+1}' for i in range(max_members)]
                 result_df = pd.DataFrame(rows, columns=headers)
                 result_df.to_excel(writer, sheet_name='소그룹 편성 결과', index=False)
+
+                # 스타일 적용 (openpyxl 객체 접근)
+                worksheet = writer.sheets['소그룹 편성 결과']
+                
+                # 스타일 정의
+                fill_leader = PatternFill(start_color='D4EDDA', end_color='D4EDDA', fill_type='solid') # 연한 초록
+                fill_care = PatternFill(start_color='F8D7DA', end_color='F8D7DA', fill_type='solid')   # 연한 빨강
+                fill_warning = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid') # 노랑 (나이 범위 초과)
+                
+                font_leader = Font(bold=True)
+                border_thin = Border(left=Side(style='thin'), right=Side(style='thin'), 
+                                   top=Side(style='thin'), bottom=Side(style='thin'))
+                
+                # 헤더 행 스타일 적용
+                for col_idx in range(1, len(headers) + 1):
+                    cell = worksheet.cell(row=1, column=col_idx)
+                    cell.border = border_thin
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
+                    cell.font = Font(bold=True)
+                    cell.fill = PatternFill(start_color='E0E0E0', end_color='E0E0E0', fill_type='solid') # 회색 배경
+
+                # 데이터 행 스타일 적용
+                for r_idx, row_styles in enumerate(styles_map, start=2): # 엑셀 행은 1부터 시작, 헤더 다음부터
+                    for c_idx, style_type in enumerate(row_styles, start=1): # 엑셀 컬럼은 1부터 시작
+                        cell = worksheet.cell(row=r_idx, column=c_idx)
+                        cell.border = border_thin
+                        cell.alignment = Alignment(horizontal='center', vertical='center')
+                        
+                        if style_type == 'warning':
+                            cell.fill = fill_warning
+                        elif style_type == 'leader':
+                            cell.fill = fill_leader
+                            cell.font = font_leader
+                        elif style_type == 'care':
+                            cell.fill = fill_care
+                
             else:
                 df.to_excel(writer, sheet_name='소그룹 편성 결과', index=False)
             
