@@ -28,11 +28,11 @@ jobs:
 
       - name: Build Portable EXE (Start-up slow, Single file)
         run: |
-          python -m PyInstaller --onefile --windowed --splash splash_image.png --name SmallGroupSorter_Portable gui_app.py
+          python -m PyInstaller --onefile --windowed --splash splash_image.png --version-file file_version_info.txt --noupx --name SmallGroupSorter_Portable gui_app.py
 
       - name: Build Folder for Installer (Fast start-up)
         run: |
-          python -m PyInstaller --onedir --windowed --splash splash_image.png --name SmallGroupSorter gui_app.py
+          python -m PyInstaller --onedir --windowed --splash splash_image.png --version-file file_version_info.txt --noupx --name SmallGroupSorter gui_app.py
 
       - name: Compile Installer (Inno Setup)
         uses: Minionguyjpro/Inno-Setup-Action@v1.2.2

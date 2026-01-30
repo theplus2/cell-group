@@ -1,8 +1,8 @@
 [Setup]
 AppId={{5B680075-8D4C-4315-99A0-2178C9E7B35C}
-AppName=Small Group Sorter
-AppVersion=2.8
-AppPublisher=ThePlus2
+AppName=소그룹 자동 편성기
+AppVersion=2.8.2
+AppPublisher=잠실한빛교회 (윤영천 목사)
 AppPublisherURL=https://github.com/theplus2/cell-group
 AppSupportURL=https://github.com/theplus2/cell-group
 AppUpdatesURL=https://github.com/theplus2/cell-group
