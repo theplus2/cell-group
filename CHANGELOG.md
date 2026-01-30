@@ -1,5 +1,19 @@
 # CHANGELOG (변경 이력)
 
+## [v3.0.0] - 2026-01-30
+### Added
+- **초기화 버튼**: GUI 상단에 데이터를 초기화할 수 있는 버튼 추가.
+- **나이 범위 시각화**: 그룹 내 나이 차이가 10살을 초과하면 노란색 경고 표시.
+- **버전 정보 중앙화**: `src/config.py`를 통해 버전 정보 일원화.
+
+### Changed
+- **멤버 정렬**: 그룹 내 멤버 정렬 순서를 `리더 → 출석점수(성적) 순`으로 변경.
+- **빌드**: GitHub Actions 워크플로우를 태그 기반 자동 릴리즈로 최적화.
+
+## [v2.9.1] - 2026-01-30
+### Fixed
+- `gui_app.py`: `pyqtSignal`을 `Signal`로 수정하여 실행 오류 해결.
+
 ## [v2.9] - 2026-01-30
 ### Changed
 - `requirements.txt`: PyQt6를 PySide6로 변경 (Qt Company 공식 바인딩으로 Smart App Control 호환성 향상)
