@@ -38,9 +38,10 @@ from src.constraints import Constraint, ConstraintType, ConstraintManager
 class SortingWorker(QThread):
     """백그라운드에서 소그룹 편성 작업을 수행하는 워커 스레드"""
     
-    progress = pyqtSignal(int, str)  # (진행률, 상태 메시지)
-    finished = pyqtSignal(object, object)  # (결과 DataFrame, 통계 DataFrame)
-    error = pyqtSignal(str)  # 에러 메시지
+    progress = Signal(int, str)  # (진행률, 상태 메시지)
+    finished = Signal(object, object)  # (결과 DataFrame, 통계 DataFrame)
+    error = Signal(str)  # 에러 메시지
+
     
     def __init__(
         self, 
