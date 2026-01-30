@@ -1,7 +1,13 @@
 # CHANGELOG (변경 이력)
 
+## [v2.9] - 2026-01-30
+### Changed
+- `requirements.txt`: PyQt6를 PySide6로 변경 (Qt Company 공식 바인딩으로 Smart App Control 호환성 향상)
+- `gui_app.py`: 모든 PyQt6 import를 PySide6로 마이그레이션, `pyqtSignal` → `Signal` 변경.
+
 ## [v2.8.3] - 2026-01-30
 ### Added
+
 - `setup.iss`: `PrivilegesRequired=lowest` 추가 (관리자 권한 없이 설치 가능)
 
 ### Changed
