@@ -1,6 +1,6 @@
 """
 교인 소그룹 자동 편성 시스템 - GUI 애플리케이션
-PyQt6 기반 데스크탑 앱
+PySide6 기반 데스크탑 앱 (Qt Company 공식 바인딩)
 """
 
 import sys
@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Optional, List, Set
 
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QSpinBox, QFileDialog, QTableWidget,
     QTableWidgetItem, QProgressBar, QGroupBox, QMessageBox,
@@ -16,8 +16,9 @@ from PyQt6.QtWidgets import (
     QComboBox, QLineEdit, QCompleter
 )
 
-from PyQt6.QtCore import Qt, QThread, pyqtSignal
-from PyQt6.QtGui import QFont, QColor, QDragEnterEvent, QDropEvent
+from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtGui import QFont, QColor, QDragEnterEvent, QDropEvent
+
 
 # 스플래시 스크린 (PyInstaller)
 try:
