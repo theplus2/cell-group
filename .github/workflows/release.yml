@@ -26,14 +26,26 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build with PyInstaller
+      - name: Build Portable EXE (Start-up slow, Single file)
         run: |
-          python -m PyInstaller --onefile --windowed --name SmallGroupSorter gui_app.py
+          python -m PyInstaller --onefile --windowed --splash splash_image.png --name SmallGroupSorter_Portable gui_app.py
+
+      - name: Build Folder for Installer (Fast start-up)
+        run: |
+          python -m PyInstaller --onedir --windowed --splash splash_image.png --name SmallGroupSorter gui_app.py
+
+      - name: Compile Installer (Inno Setup)
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        with:
+          path: setup.iss
+          options: /O+
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: dist/SmallGroupSorter.exe
+          files: |
+            dist/SmallGroupSorter_Portable.exe
+            Output/SmallGroupSorter_Setup.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

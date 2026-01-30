@@ -18,6 +18,12 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont, QColor, QDragEnterEvent, QDropEvent
 
+# 스플래시 스크린 (PyInstaller)
+try:
+    import pyi_splash
+except ImportError:
+    pyi_splash = None
+
 # 프로젝트 모듈 임포트
 sys.path.insert(0, str(Path(__file__).parent))
 from src.data_loader import DataLoader
@@ -709,6 +715,11 @@ def main():
     app.setFont(font)
     
     window = MainWindow()
+    
+    # 스플래시 스크린 닫기
+    if pyi_splash:
+        pyi_splash.close()
+        
     window.show()
     
     sys.exit(app.exec())
