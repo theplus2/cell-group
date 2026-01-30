@@ -1,17 +1,15 @@
 [Setup]
 AppId={{5B680075-8D4C-4315-99A0-2178C9E7B35C}
 AppName=Small Group Sorter
-AppVersion=2.6
+AppVersion=2.8
 AppPublisher=ThePlus2
 AppPublisherURL=https://github.com/theplus2/cell-group
 AppSupportURL=https://github.com/theplus2/cell-group
 AppUpdatesURL=https://github.com/theplus2/cell-group
 DefaultDirName={autopf}\Small Group Sorter
 DisableProgramGroupPage=yes
-; 아이콘 설정
-SetupIconFile=splash_image.png
-; 생성될 설치 파일 이름 (예: SmallGroupSorter_Setup.exe)
 OutputBaseFilename=SmallGroupSorter_Setup
+
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern

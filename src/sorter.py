@@ -408,13 +408,14 @@ class GroupSorter:
 
     def _assign_leaders_to_groups(self, leaders: Set[str], num_groups: int):
         """
-        리더를 각 그룹에 배정 (리더 나이에 맞는 조에 배정)
-        - 리더의 나이를 확인하고, 해당 나이 밴드에 속하는 조에 배정
-        - 이미 리더가 있는 조는 건너뛰고 다음으로 가까운 조에 배정
+        리더를 각 그룹에 배정 (v2.8 개선)
+        - 리더 1인 1조 강제: 이미 리더가 있는 조는 배정 후보에서 제외
+        - 나이 매칭 정교화: 중앙값(Median) + 나이 범위(Min~Max) 기반 매칭
         """
         if self.result_df.empty:
             return
         
+        # 1. 리더 정보 수집
         leader_list = list(leaders)
         leader_rows = []
         for name in leader_list:
@@ -422,7 +423,6 @@ class GroupSorter:
             if len(data) > 0:
                 row = data.iloc[0].to_dict()
                 row['분류결과'] = '리더'
-                # 나이 정보 추가
                 if '나이_정제' in row:
                     row['리더나이'] = row['나이_정제']
                 elif '나이' in row:
@@ -431,19 +431,28 @@ class GroupSorter:
                     row['리더나이'] = 0
                 leader_rows.append(row)
         
-        # 각 조의 평균 나이 계산
-        group_avg_ages = {}
+        # 2. 각 조의 나이 통계 계산 (중앙값, 최소, 최대)
+        group_age_stats = {}
         for group_name in self.result_df['소그룹명'].unique():
             group_df = self.result_df[self.result_df['소그룹명'] == group_name]
             if '나이' in group_df.columns:
-                avg_age = pd.to_numeric(group_df['나이'], errors='coerce').mean()
+                ages = pd.to_numeric(group_df['나이'], errors='coerce').dropna()
             elif '나이_정제' in group_df.columns:
-                avg_age = group_df['나이_정제'].mean()
+                ages = group_df['나이_정제'].dropna()
             else:
-                avg_age = 0
-            group_avg_ages[group_name] = avg_age
+                ages = pd.Series([0])
+            
+            if len(ages) > 0:
+                group_age_stats[group_name] = {
+                    'median': ages.median(),
+                    'min': ages.min(),
+                    'max': ages.max(),
+                    'count': len(group_df)
+                }
+            else:
+                group_age_stats[group_name] = {'median': 0, 'min': 0, 'max': 0, 'count': 0}
         
-        # 이미 리더가 있는 조 목록
+        # 3. 이미 리더가 있는 조 목록
         groups_with_leaders = set()
         if '분류결과' in self.result_df.columns:
             for group_name in self.result_df['소그룹명'].unique():
@@ -451,31 +460,37 @@ class GroupSorter:
                 if (group_df['분류결과'] == '리더').any():
                     groups_with_leaders.add(group_name)
         
-        # 각 리더를 나이에 맞는 조에 배정
+        # 4. 각 리더를 나이에 맞는 조에 배정
         for row in leader_rows:
             leader_age = row.get('리더나이', 0)
             
-            # 리더가 없는 조 중에서 나이 차이가 가장 작은 조 찾기
-            available_groups = [g for g in group_avg_ages.keys() if g not in groups_with_leaders]
+            # 리더가 없는 조만 후보로 (1조 1리더 강제)
+            available_groups = [g for g in group_age_stats.keys() if g not in groups_with_leaders]
             
             if not available_groups:
-                # 모든 조에 리더가 있으면 첫 번째 조에 추가
-                available_groups = list(group_avg_ages.keys())
+                # 모든 조에 리더가 있으면 배정하지 않고 경고 로그
+                print(f"⚠️ 경고: 모든 조에 리더가 이미 배정되어 '{row.get('이름', '')}' 리더를 추가 배정할 수 없습니다.")
+                continue  # 중복 배정 방지
             
-            # 나이 차이가 가장 작은 조 선택
-            best_group = min(available_groups, 
-                           key=lambda g: abs(group_avg_ages.get(g, 0) - leader_age))
+            # 최적의 조 선택 (나이 범위 포함 여부 > 중앙값 차이)
+            def score_group(g):
+                stats = group_age_stats[g]
+                in_range = stats['min'] <= leader_age <= stats['max']
+                median_diff = abs(stats['median'] - leader_age)
+                # 범위 내에 있으면 0점, 아니면 100점 + 중앙값 차이
+                return (0 if in_range else 100) + median_diff
+            
+            best_group = min(available_groups, key=score_group)
             
             row['소그룹명'] = best_group
             groups_with_leaders.add(best_group)
             
-            # 리더나이 컬럼 제거 (임시 컬럼)
             if '리더나이' in row:
                 del row['리더나이']
             
-            # 결과 DF에 추가
             new_row_df = pd.DataFrame([row])
             self.result_df = pd.concat([new_row_df, self.result_df], ignore_index=True)
+
     
     def _auto_assign_leaders(self):
         """

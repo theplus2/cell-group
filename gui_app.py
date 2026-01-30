@@ -13,8 +13,9 @@ from PyQt6.QtWidgets import (
     QLabel, QPushButton, QSpinBox, QFileDialog, QTableWidget,
     QTableWidgetItem, QProgressBar, QGroupBox, QMessageBox,
     QFrame, QSplitter, QHeaderView, QStatusBar, QTabWidget,
-    QComboBox, QLineEdit
+    QComboBox, QLineEdit, QCompleter
 )
+
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont, QColor, QDragEnterEvent, QDropEvent
 
@@ -171,15 +172,26 @@ class ConstraintsTab(QWidget):
             self.person2_combo.clearEditText()
             
     def update_names(self, names: Set[str]):
-        """이름 목록 업데이트"""
+        """이름 목록 업데이트 (검색 가능한 자동완성 적용)"""
         self.loaded_names = names
         sorted_names = sorted(list(names))
         
+        # 대상1 콤보박스
         self.person1_combo.clear()
         self.person1_combo.addItems(sorted_names)
+        completer1 = QCompleter(sorted_names, self)
+        completer1.setFilterMode(Qt.MatchFlag.MatchContains)  # 중간 글자도 검색
+        completer1.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.person1_combo.setCompleter(completer1)
         
+        # 대상2 콤보박스
         self.person2_combo.clear()
         self.person2_combo.addItems(sorted_names)
+        completer2 = QCompleter(sorted_names, self)
+        completer2.setFilterMode(Qt.MatchFlag.MatchContains)
+        completer2.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.person2_combo.setCompleter(completer2)
+
         
     def set_manager(self, manager: ConstraintManager):
         """외부에서 로드된 매니저 설정"""
